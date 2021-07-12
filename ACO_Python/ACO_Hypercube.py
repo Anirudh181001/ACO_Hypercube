@@ -2,7 +2,6 @@ from operator import invert
 import numpy as np
 import random as rd
 from numpy.lib.utils import source
-from python_tsp.exact import solve_tsp_dynamic_programming
 import copy
 from numpy import inf
 import sys
@@ -13,7 +12,7 @@ from tqdm import tqdm
 import time
 
 #Initialize variables
-n = 12
+n = 15
 num_vertices = 2**n
 num_ants = n
 tic = time.time()

@@ -1,9 +1,9 @@
 #Helper functions
 import networkx
+from networkx.generators.random_graphs import fast_gnp_random_graph
 import numpy as np
 import random as rd
 import copy
-from python_tsp.exact import solve_tsp_dynamic_programming
 from numpy import inf
 import sys
 
@@ -114,31 +114,53 @@ print("edge colours is ")
 print(random_colouring(make_hypercube_matrix(3)))
 
 class Ant:
-    def __init__(self, number) -> None:
+    def __init__(self, number, curr_color = None) -> None:
         self.has_changed_col = False
         self.number = number
-        self.curr_color = None
-        self.history_edges = []
-        self.history_colours = []
+        self.curr_color = curr_color
+        self.history_vertices = []
+        self.last_visited = {}
+        self.history_colours = [self.curr_color]
+        self.last_vertex_before_color_change = None
 
-    def set_curr_colour(self, col):
+    def __str__(self):
+        return f"Ant {self.number}"
+
+    def set_curr_color(self, col):
         self.curr_color = col
+        self.history_colours.append(col)
         
     def set_has_changed_col(self):
         self.has_changed_col = True
         
-    def add_to_visited(self, start_vertex, end_vertex):
-        self.history_edges.append((start_vertex, end_vertex))
+    def add_to_visited(self, end_vertex):
+        self.history_vertices.append(end_vertex)
+        if not self.has_changed_col:
+            self.last_vertex_before_color_change = self.history_vertices[-1]
+        self.last_visited = self.history_vertices[-1]
         
     def add_to_history_colours(self, col):
-        self.history_colours.append(col)   
-
+        self.history_colours.append(col) 
+        
+    def reset_to_last_color_change_state(self):
+        self.last_visited = self.last_vertex_before_color_change
+        self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_visited)+1]
+        self.has_changed_col = False
+        # self.add_to_history_colours(get_opp_color(self.curr_color))
+        # self.curr_color = get_opp_color(self.curr_color)
+        
 
 def get_col(adj_list_random_colour, start_vertex, end_vertex):
     if start_vertex in adj_list_random_colour['red'] and end_vertex in adj_list_random_colour['red'][start_vertex]:
         return 'red'
     else:
         return 'blue'
+
+def get_opp_color(color):
+    if color == "blue":
+        return "red"
+    else:
+        return "blue"
     
     
     

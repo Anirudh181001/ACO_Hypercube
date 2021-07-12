@@ -2,7 +2,6 @@ from operator import invert
 import numpy as np
 import random as rd
 from numpy.lib.utils import source
-from python_tsp.exact import solve_tsp_dynamic_programming
 import copy
 from numpy import inf
 import sys
@@ -13,7 +12,7 @@ from tqdm import tqdm
 import time
 
 #Initialize variables
-n = 3
+n = 10
 num_vertices = 2**n
 num_ants = n
 tic = time.time()
@@ -26,7 +25,6 @@ toc = time.time()
 print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
 currloc = generate_source(n) # n-tuple of zeros (origin)
 iterations = 500
-currloc_dict = {}
 breaker = False
 #print(adj_list)
 visited_red = {}
@@ -34,15 +32,12 @@ visited_blue = {}
 
 #initialize ants 
 ants_list = []
-for i in num_ants:
-    new_ant = Ant(i):
+for i in range(num_ants):
+    ants_list.append(Ant(i, None))
 
-
-# Set the start position for all ants to source
-for ant in range(num_ants):
-    currloc_dict[ant] = currloc
 
 #The fun begins
+# print(adj_list_random_colour)
 for iter in range(iterations):
     print("iteration: ",iter)
     
@@ -52,42 +47,64 @@ for iter in range(iterations):
     for ant in range(num_ants):
         
         if iter == 0:
-            choice_vertex = rd.choice(adj_list[currloc_dict[ant]]) #Randomly select a vertex from the adjacency list
-            colour = adj_list_random_colour
-            new_ant = Ant()
+            choice_vertex = rd.choice(adj_list_random_colour['red'][currloc]) if currloc in adj_list_random_colour['red'] else rd.choice(adj_list_random_colour['blue'][currloc])  #Randomly select a vertex from the adjacency list
+            new_ant = ants_list[ant]
+            new_ant.add_to_visited(currloc)
+            if(currloc in adj_list_random_colour['red'] and choice_vertex in adj_list_random_colour['red'][currloc]):
+                new_ant.set_curr_color('red')
+            else:
+                new_ant.set_curr_color('blue')
+            new_ant.add_to_visited(choice_vertex)
+            # print(f"ant_id: {id(new_ant)}")
         else:
             #try to continue colour 
-            choice_vertex = 
+            choice_vertex = rd.choice(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])
+            # print(f"ant_id: {id(new_ant)}")
+            
+            
+        # print("choice vertex is ", choice_vertex)
+        
+        # print(new_ant.history_vertices)
+            
         if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
             
-            print("Red ant reached the end vertex")
+            print("Ant reached the end vertex first time")
             breaker = True
             break        
         
-        while (currloc, choice_vertex) in visited_red: # Make sure the choice_edge has not already been visited
-
-            choice_vertex = rd.choice(adj_list[currloc_dict[ant]])
-            if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
-                print("Red ant reached the end vertex")
+        check_can_continue_same_col = (currloc in adj_list_random_colour[new_ant.curr_color] and choice_vertex in adj_list_random_colour[new_ant.curr_color][currloc])
+        counter = 0 
+        while not check_can_continue_same_col or choice_vertex in new_ant.history_vertices: # Make sure the choice_edge has not already been visited
+            counter += 1
+            if counter == 20:
+                new_ant.reset_to_last_color_change_state()
+                # print("RESETTING SHIT")
+                break
+            possible_vertices =  set(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) - set(new_ant.history_vertices)
+            # print("possible vertices is ", possible_vertices)
+            if invert_tuple(generate_source(n)) in possible_vertices:
+                choice_vertex = invert_tuple(generate_source(n))
+                break
+            if len(possible_vertices.intersection(adj_list_random_colour[new_ant.curr_color])) == 0 or set(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]).issubset(set(new_ant.history_vertices)): #need to change colour
+                if len(possible_vertices) == 0:
+                    choice_vertex = rd.choice(adj_list_random_colour[get_opp_color(new_ant.curr_color)][new_ant.last_visited])
+                    # print("choice vertex is " ,choice_vertex)
+                else:
+                    choice_vertex = rd.choice(list(possible_vertices))
+                    # print("else choice vertex is ", choice_vertex)
+                new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
+                new_ant.has_changed_color = True
+                new_ant.add_to_history_colours(new_ant.curr_color)
+                # print("choice vertex after changing color is ", choice_vertex)
+            
+            else:
+                choice_vertex = rd.choice(list(possible_vertices))
+                # print("choice vertex in while loop is ", choice_vertex)
+        #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
+        new_ant.add_to_visited(choice_vertex)
+        if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
+                print("Ant reached the end vertex")
                 breaker = True
                 break  
-        #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
-        visited_red[(currloc, choice_vertex)] = True #red edge
-        visited_red[(choice_vertex, currloc)] = True #red edge (opp direction)
-        visited_blue[(invert_tuple(currloc), invert_tuple(choice_vertex))] = True #blue edge
-        visited_blue[(invert_tuple(choice_vertex), invert_tuple(currloc))] = True #blue edge (opp direction)
-        
-        intersection = set(visited_blue.keys()) & set(visited_red.keys()) #if red meets blue
-        
-        #Check if there is any intersection between the edges visited by red and blue ant
-        if len(intersection) > 0:
-            print("Intersection Found!")
-            print("intersection: ", intersection)
-            # print("blue ant path: ",visited_blue)
-            # print("red ant path: ",visited_red)
-            breaker = True
-            break
-        
-        #Update current position of ant
-        currloc = choice_vertex
-        currloc_dict[ant] = currloc
+        # #Update current position of ant
+        # currloc = choice_vertex
