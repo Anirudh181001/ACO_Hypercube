@@ -14,7 +14,7 @@ import time
 #Initialize variables
 n = 10
 num_vertices = 2**n
-num_ants = n
+num_ants = 20
 tic = time.time()
 adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
 toc = time.time()
@@ -26,7 +26,6 @@ print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
 currloc = generate_source(n) # n-tuple of zeros (origin)
 iterations = 500
 breaker = False
-#print(adj_list)
 visited_red = {}
 visited_blue = {}
 
@@ -37,7 +36,6 @@ for i in range(num_ants):
 
 
 #The fun begins
-# print(adj_list_random_colour)
 for iter in range(iterations):
     print("iteration: ",iter)
     
@@ -55,16 +53,10 @@ for iter in range(iterations):
             else:
                 new_ant.set_curr_color('blue')
             new_ant.add_to_visited(choice_vertex)
-            # print(f"ant_id: {id(new_ant)}")
+            
         else:
             #try to continue colour 
             choice_vertex = rd.choice(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])
-            # print(f"ant_id: {id(new_ant)}")
-            
-            
-        # print("choice vertex is ", choice_vertex)
-        
-        # print(new_ant.history_vertices)
             
         if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
             
@@ -78,33 +70,29 @@ for iter in range(iterations):
             counter += 1
             if counter == 20:
                 new_ant.reset_to_last_color_change_state()
-                print("RESETTING SHIT")
                 break
             possible_vertices =  set(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) - set(new_ant.history_vertices)
-            # print("possible vertices is ", possible_vertices)
+
             if invert_tuple(generate_source(n)) in possible_vertices:
                 choice_vertex = invert_tuple(generate_source(n))
                 break
             if len(possible_vertices.intersection(adj_list_random_colour[new_ant.curr_color])) == 0 or set(adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]).issubset(set(new_ant.history_vertices)): #need to change colour
                 if len(possible_vertices) == 0:
                     choice_vertex = rd.choice(adj_list_random_colour[get_opp_color(new_ant.curr_color)][new_ant.last_visited])
-                    # print("choice vertex is " ,choice_vertex)
+
                 else:
                     choice_vertex = rd.choice(list(possible_vertices))
-                    # print("else choice vertex is ", choice_vertex)
+
                 new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
                 new_ant.has_changed_color = True
                 new_ant.add_to_history_colours(new_ant.curr_color)
-                # print("choice vertex after changing color is ", choice_vertex)
             
             else:
                 choice_vertex = rd.choice(list(possible_vertices))
-                # print("choice vertex in while loop is ", choice_vertex)
+
         #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
         new_ant.add_to_visited(choice_vertex)
         if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
                 print("Ant reached the end vertex")
                 breaker = True
                 break  
-        # #Update current position of ant
-        # currloc = choice_vertex

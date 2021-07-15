@@ -12,7 +12,7 @@ from tqdm import tqdm
 import time
 
 #Initialize variables
-n = 15
+n = 12
 num_vertices = 2**n
 num_ants = n
 tic = time.time()
