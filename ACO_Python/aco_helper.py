@@ -119,6 +119,7 @@ class Ant:
         self.number = number
         self.curr_color = curr_color
         self.history_vertices = []
+        self.is_violated = False
         self.last_visited = {}
         self.history_colours = [self.curr_color]
         self.last_vertex_before_color_change = None
@@ -131,6 +132,8 @@ class Ant:
         self.history_colours.append(col)
         
     def set_has_changed_col(self):
+        if self.has_changed_col:
+            self.is_violated = True
         self.has_changed_col = True
         
     def add_to_visited(self, end_vertex):
