@@ -6,6 +6,7 @@ import random as rd
 import copy
 from numpy import inf
 import sys
+import dataclasses
 
 def make_sym_matrix(n,vals):
     m = np.zeros([n,n])
@@ -113,6 +114,7 @@ def random_colouring(hypercube):
 print("edge colours is ")
 print(random_colouring(make_hypercube_matrix(3)))
 
+# @dataclasses
 class Ant:
     def __init__(self, number, curr_color = None) -> None:
         self.has_changed_col = False
