@@ -49,7 +49,6 @@ def calc_choice_city(probs,n_cities,temp_AP,ant,node):
 def make_hypercube_matrix(n):
     matrix = networkx.to_dict_of_lists(networkx.generators.lattice.hypercube_graph(n))
     return matrix
-print(make_hypercube_matrix(3))
 
 def invert_tuple(vertex):
     ans = []
@@ -67,7 +66,8 @@ def generate_source(n):
         ans.append(0)
     return tuple(ans)
 
-def random_colouring(hypercube):
+def random_colouring(hypercube_main):
+    hypercube = {key:copy.deepcopy(value) for key,value in hypercube_main.items()}
     edge_colours = {"red": {}, "blue": {}}
     while len(hypercube) != 0:
         random_vertex_start = rd.choice(list(hypercube.keys()))
@@ -111,9 +111,6 @@ def random_colouring(hypercube):
     
     return edge_colours
 
-print("edge colours is ")
-print(random_colouring(make_hypercube_matrix(3)))
-
 # @dataclasses
 class Ant:
     def __init__(self, number, curr_color = None) -> None:
@@ -122,8 +119,9 @@ class Ant:
         self.curr_color = curr_color
         self.history_vertices = []
         self.is_violated = False
+        self.all_vertices = []
         self.last_visited = {}
-        self.history_colours = [self.curr_color]
+        self.history_colours = []
         self.last_vertex_before_color_change = None
 
     def __str__(self):
@@ -140,9 +138,10 @@ class Ant:
         
     def add_to_visited(self, end_vertex):
         self.history_vertices.append(end_vertex)
+        self.all_vertices.append(end_vertex)
         if not self.has_changed_col:
-            self.last_vertex_before_color_change = self.history_vertices[-1]
-        self.last_visited = self.history_vertices[-1]
+            self.last_vertex_before_color_change = end_vertex
+        self.last_visited = end_vertex
         
     def add_to_history_colours(self, col):
         self.history_colours.append(col) 
@@ -154,6 +153,16 @@ class Ant:
         # self.add_to_history_colours(get_opp_color(self.curr_color))
         # self.curr_color = get_opp_color(self.curr_color)
         
+    def status(self):
+        print(f"self.number: {self.number}")
+        print(f"self.curr_color: {self.curr_color}")
+        print(f"self.history_vertices: {self.history_vertices}")
+        print(f"self.is_violated: {self.is_violated}")
+        print(f"self.all_vertices: {self.all_vertices}")
+        print(f"self.last_visited: {self.last_visited}")
+        print(f"self.history_colours: {self.history_colours}")
+        print(f"self.last_vertex_before_color_change: {self.last_vertex_before_color_change}")
+
 
 def get_col(adj_list_random_colour, start_vertex, end_vertex):
     if start_vertex in adj_list_random_colour['red'] and end_vertex in adj_list_random_colour['red'][start_vertex]:
@@ -166,6 +175,12 @@ def get_opp_color(color):
         return "red"
     else:
         return "blue"
+    
+def change_to_gray(color):
+    if color == 'red':
+        return "#E8E8E8"
+    else:
+        return "#E0E0E0"
     
     
     
