@@ -12,26 +12,29 @@ from tqdm import tqdm
 import time
 from pyvis.network import Network
 
-def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
+def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
     start = True
+    def generate_values_to_plot(new_ant):
+        path_length = len(new_ant.history_vertices) - new_ant.num_resets
+        return new_ant.number, path_length
+        
     #Initialize variables
     def initialize(n, num_ants):
         num_vertices = 2**n
         tic = time.time()
         adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
         toc = time.time()
-        print("Time taken to generate adjacency list is ",toc - tic, " seconds")
+        if not plot_stats:
+            print("Time taken to generate adjacency list is ",toc - tic, " seconds")
         tic = time.time()
         adj_list_random_colour = random_colouring(adj_list) #Randomized colouring of the n-hypercube graph
         toc = time.time()
-        print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
+        if not plot_stats:
+            print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
         return num_vertices, num_ants, adj_list, adj_list_random_colour
 
-
-    if start:
-        
+    if start:        
         num_vertices, num_ants, adj_list, adj_list_random_colour = initialize(n, num_ants)
-        
         currloc = generate_source(n) # n-tuple of zeros (origin)
         iterations = 500
         breaker = False
@@ -44,7 +47,8 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
 
         #The fun begins
         for iter in range(iterations):
-            print("iteration: ",iter)
+            if not plot_stats:
+                print("iteration: ",iter)
             
             if (breaker == True):
                 break
@@ -69,7 +73,8 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
                     if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or ((choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and not new_ant.has_changed_col)):
                         new_ant.set_has_changed_col()
                         new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
-                        print(f"{new_ant} is violated: ", new_ant.is_violated)
+                        if not plot_stats:
+                            print(f"{new_ant} is violated: ", new_ant.is_violated)
                         
 
                 # Make sure the choice_edge has not already been visited. If the choice vertex in history, find a new one...
@@ -88,7 +93,8 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
                                     temp_var.add(i)
                             possible_vertices -= temp_var
                         if len(possible_vertices) == 0:
-                            print(f"{new_ant} getting reset")
+                            if not plot_stats:
+                                print(f"{new_ant} getting reset")
                             new_ant.reset_to_last_color_change_state()
                             
                             break
@@ -111,7 +117,11 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
                     
                 if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
                     new_ant.add_to_visited(choice_vertex)
-                    print(f"{new_ant} reached the end vertex first time")
+                    if not plot_stats:
+                        print(f"{new_ant} reached the end vertex first time")
+                    
+                    if plot_stats:
+                        return generate_values_to_plot(new_ant), iter
                     
                     if plot_network_graph:
                         hypercube = nx.Graph()
@@ -135,8 +145,11 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
 
                 if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
                     new_ant.add_to_visited(choice_vertex)
-                    print(f"{new_ant} reached the end vertex")
+                    if not plot_stats:
+                        print(f"{new_ant} reached the end vertex")
                     
+                    if plot_stats: 
+                        return generate_values_to_plot(new_ant), iter
                     if plot_network_graph:
                         hypercube = nx.Graph()
                         g = Network(height=2000,width=2000,notebook=False)
@@ -144,8 +157,6 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
                         g.barnes_hut()
                         edgelist = [("".join(map(str,node1)), "".join(map(str,node2)),  {'color':change_to_gray(color)}) for color in adj_list_random_colour for node1 in adj_list_random_colour[color] for node2 in adj_list_random_colour[color][node1]]
                         hypercube.add_edges_from(edgelist)
-                        
-
                         ant_edges = [("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {"color": "red"}) if ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': '#FFC2CB'}) in edgelist
                                     else  ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': 'blue'}) for i in range(1,len(new_ant.history_vertices))]
 
@@ -154,5 +165,8 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph):
                         g.show("ex.html")   
                     breaker = True
                     break  
+    if plot_stats:
+        return ((-1, -1),501)
+    
 
-run_ants_on_hypercube_random_colors(7,10, True)
+#print(run_ants_on_hypercube_random_colors(7,10, True, False))

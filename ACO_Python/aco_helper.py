@@ -120,6 +120,7 @@ class Ant:
         self.history_vertices = []
         self.is_violated = False
         self.last_visited = {}
+        self.num_resets = 0
         self.history_colours = []
         self.last_vertex_before_color_change = None
 
@@ -145,6 +146,7 @@ class Ant:
         self.history_colours.append(col) 
         
     def reset_to_last_color_change_state(self):
+        self.num_resets += 1
         self.last_visited = self.last_vertex_before_color_change
         self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_vertex_before_color_change)+1]
         self.has_changed_col = False
