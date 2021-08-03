@@ -30,7 +30,7 @@ def initialize(n, num_ants):
 
 if start:
     n = 5
-    num_ants = 7
+    num_ants = 1
     num_vertices, num_ants, adj_list, adj_list_random_colour = initialize(n, num_ants)
     print(adj_list_random_colour)
 
@@ -54,40 +54,36 @@ if start:
         
         for ant in range(num_ants):
             new_ant = ants_list[ant]
-            
+            color_changer_correct = False
             if iter == 0:
-                choice_vertex = rd.choice(adj_list_random_colour['blue'][currloc]) if currloc in adj_list_random_colour['blue'] else rd.choice(adj_list_random_colour['red'][currloc])  #Randomly select a vertex from the adjacency list
+                choice_vertex = rd.choice(adj_list_random_colour['red'][currloc]) if currloc in adj_list_random_colour['red'] else rd.choice(adj_list_random_colour['blue'][currloc])  #Randomly select a vertex from the adjacency list
                 new_ant.add_to_visited(currloc)
-                print(new_ant.status())
-                print(currloc in adj_list_random_colour['red'])
-                print(choice_vertex in adj_list_random_colour['red'][currloc] if currloc in adj_list_random_colour["red"] else "lol")
+                # print(new_ant.status())
                 
                 if ((currloc in adj_list_random_colour['red']) and (choice_vertex in adj_list_random_colour['red'][currloc])):
-                    print("REDDY")
                     new_ant.set_curr_color('red')
                 else:
-                    print("NOT REDDY")
                     new_ant.set_curr_color('blue')
                 # new_ant.add_to_visited(choice_vertex)
-                print(new_ant.status())
+                # print(new_ant.status())
 
             else:
                 #try to continue colour 
                 choice_vertex = rd.choice(adj_list[new_ant.last_visited])
-                print("TEST ", adj_list_random_colour[new_ant.curr_color], "choice_vertex is ", choice_vertex)
+                # print("TEST ", adj_list_random_colour[new_ant.curr_color], "choice_vertex is ", choice_vertex)
                 
-                if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (
-                    (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and not new_ant.has_changed_col)):
+                if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or ((choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and not new_ant.has_changed_col)):
                     new_ant.set_has_changed_col()
                     new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
+                    print(f"{new_ant} is violated: ", new_ant.is_violated)
+                    
                 
-            print(new_ant.status())
+            # print(new_ant.status())
 
             # Make sure the choice_edge has not already been visited. If the choice vertex in history, find a new one...
-            print([key for key in adj_list_random_colour[new_ant.curr_color]])
-            print(f"jfwiohfewufhwef {new_ant}", adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])
-            if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (
-                    (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and new_ant.has_changed_col)):
+            # print([key for key in adj_list_random_colour[new_ant.curr_color]])
+            # print(f"jfwiohfewufhwef {new_ant}", adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])
+            if((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited] and new_ant.has_changed_col)):
                 if iter ==0:
                     print("Nothing happens here")
                 else:
@@ -103,19 +99,19 @@ if start:
                         possible_vertices -= temp_var
                     if len(possible_vertices) == 0:
                         print(new_ant.status())
+                        print(f"{new_ant} getting reset")
                         new_ant.reset_to_last_color_change_state()
                         print(new_ant.status())
-                        print("all vertices is ", new_ant.all_vertices)
-                        print(f"{new_ant} getting reset")
+                        # print("all vertices is ", new_ant.all_vertices)
+                        
                         break
 
                     # print(f"possible_vertices from {new_ant.last_visited} for {new_ant}: {possible_vertices}")
                     choice_vertex = rd.choice(list(possible_vertices))
-                    if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (
-                    (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and not new_ant.has_changed_col)):
+                    if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])):
                         new_ant.set_has_changed_col()
-                        new_ant.set_curr_col(get_opp_color(new_ant.curr_color))
-                    print("entering if: ", new_ant, " possible vertices ", possible_vertices,"choice_vertex ", choice_vertex)
+                        new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
+                    # print("entering if: ", new_ant, " possible vertices ", possible_vertices,"choice_vertex ", choice_vertex)
                     #if the end vertex (1-tuple) is in the possible vertices, then that is the choice
                     if invert_tuple(generate_source(n)) in possible_vertices:
                         choice_vertex = invert_tuple(generate_source(n))
@@ -143,12 +139,12 @@ if start:
                 g = Network(height=2000,width=2000,notebook=False)
                 g.toggle_hide_edges_on_drag(False)
                 g.barnes_hut()
-                color_map = {"red": "green", "blue": "yellow"}
-                ant_edges = [("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {"color": "green"}) if ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.all_vertices[i])), {'color': 'red'}) in edgelist
-                             else  ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': 'yellow'}) for i in range(1,len(new_ant.history_vertices))]
-                print("ant edges is ", ant_edges)
-                print("history vertices is ", new_ant.history_vertices)
-                hypercube.add_edges_from(ant_edges)
+
+                ant_edges = [("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {"color": "red"}) if ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': '#E8E8E8'}) in edgelist
+                             else  ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': 'blue'}) for i in range(1,len(new_ant.history_vertices))]
+                # print("ant edges is ", ant_edges)
+                # print("history vertices is ", new_ant.history_vertices)
+                hypercube.add_edges_from(ant_edges)    
                 g.from_nx(hypercube)
                 g.show("ex.html")
 
@@ -157,8 +153,8 @@ if start:
 
             #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
             new_ant.add_to_visited(choice_vertex)
-            print(f"{new_ant} choice vertes is {new_ant.last_visited}")
-            print(f"{new_ant} color is {new_ant.curr_color}")
+            # print(f"{new_ant} choice vertes is {new_ant.last_visited}")
+            # print(f"{new_ant} color is {new_ant.curr_color}")
             if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
                 new_ant.add_to_visited(choice_vertex)
                 print(f"{new_ant} reached the end vertex")
@@ -175,11 +171,11 @@ if start:
                 edgelist = [("".join(map(str,node1)), "".join(map(str,node2)),  {'color':change_to_gray(color)}) for color in adj_list_random_colour for node1 in adj_list_random_colour[color] for node2 in adj_list_random_colour[color][node1]]
                 hypercube.add_edges_from(edgelist)
                 
-                print("history vertices is ", new_ant.history_vertices)
-                color_map = {"red": "green", "blue": "yellow"}
-                ant_edges = [("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {"color": "green"}) if ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.all_vertices[i])), {'color': 'red'}) in edgelist
-                             else  ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': 'yellow'}) for i in range(1,len(new_ant.history_vertices))]
-                print("ant edges is ", ant_edges)
+                # print("history vertices is ", new_ant.history_vertices)
+
+                ant_edges = [("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {"color": "red"}) if ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': '#E8E8E8'}) in edgelist
+                             else  ("".join(map(str,new_ant.history_vertices[i-1])), "".join(map(str,new_ant.history_vertices[i])), {'color': 'blue'}) for i in range(1,len(new_ant.history_vertices))]
+                # print("ant edges is ", ant_edges)
                 hypercube.add_edges_from(ant_edges)
                 g.from_nx(hypercube)
                 g.show("ex.html")   

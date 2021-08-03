@@ -66,7 +66,7 @@ for iter in range(iterations):
         
         check_can_continue_same_col = (currloc in adj_list_random_colour[new_ant.curr_color] and choice_vertex in adj_list_random_colour[new_ant.curr_color][currloc])
         counter = 0 
-        while (not check_can_continue_same_col) or choice_vertex in new_ant.history_vertices: # Make sure the choice_edge has not already been visited
+        while (not check_can_continue_same_col and new_ant.has_changed_col) or choice_vertex in new_ant.history_vertices: # Make sure the choice_edge has not already been visited
             counter += 1
             if counter == 20:
                 new_ant.reset_to_last_color_change_state()

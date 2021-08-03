@@ -148,10 +148,10 @@ class Ant:
         
     def reset_to_last_color_change_state(self):
         self.last_visited = self.last_vertex_before_color_change
-        self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_visited)+1]
+        self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_vertex_before_color_change)+1]
         self.has_changed_col = False
-        # self.add_to_history_colours(get_opp_color(self.curr_color))
-        # self.curr_color = get_opp_color(self.curr_color)
+        self.add_to_history_colours(get_opp_color(self.curr_color))
+        self.curr_color = get_opp_color(self.curr_color)
         
     def status(self):
         print(f"self.number: {self.number}")
