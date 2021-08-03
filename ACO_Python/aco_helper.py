@@ -119,7 +119,6 @@ class Ant:
         self.curr_color = curr_color
         self.history_vertices = []
         self.is_violated = False
-        self.all_vertices = []
         self.last_visited = {}
         self.history_colours = []
         self.last_vertex_before_color_change = None
@@ -138,7 +137,6 @@ class Ant:
         
     def add_to_visited(self, end_vertex):
         self.history_vertices.append(end_vertex)
-        self.all_vertices.append(end_vertex)
         if not self.has_changed_col:
             self.last_vertex_before_color_change = end_vertex
         self.last_visited = end_vertex
@@ -158,7 +156,6 @@ class Ant:
         print(f"self.curr_color: {self.curr_color}")
         print(f"self.history_vertices: {self.history_vertices}")
         print(f"self.is_violated: {self.is_violated}")
-        print(f"self.all_vertices: {self.all_vertices}")
         print(f"self.last_visited: {self.last_visited}")
         print(f"self.history_colours: {self.history_colours}")
         print(f"self.last_vertex_before_color_change: {self.last_vertex_before_color_change}")
@@ -177,10 +174,11 @@ def get_opp_color(color):
         return "blue"
     
 def change_to_gray(color):
-    if color == 'red':
-        return "#E8E8E8"
+    if color == 'blue':
+        return "#8CD8FF"
     else:
-        return "#E0E0E0"
+        return "#FFC2CB"
+
     
     
     
