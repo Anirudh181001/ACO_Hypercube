@@ -17,6 +17,8 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
     def generate_values_to_plot(new_ant):
         path_length = len(new_ant.history_vertices) - new_ant.num_resets
         return new_ant.number, path_length
+    n_matchings = {i:[] for i in range(num_ants)}
+    
         
     #Initialize variables
     def initialize(n, num_ants):
@@ -29,9 +31,10 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
         tic = time.time()
         adj_list_random_colour = random_colouring(adj_list) #Randomized colouring of the n-hypercube graph
         toc = time.time()
+        n_matchings_default = generate_n_matchings(adj_list)
         if not plot_stats:
             print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
-        return num_vertices, num_ants, adj_list, adj_list_random_colour
+        return num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default
     
     def plot_network(new_ant, adj_list_random_colour):
         hypercube = nx.Graph()
@@ -47,7 +50,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
         g.show("ex.html")
 
     if start:        
-        num_vertices, num_ants, adj_list, adj_list_random_colour = initialize(n, num_ants)
+        num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants)
         currloc = generate_source(n) # n-tuple of zeros (origin)
         iterations = 500
         breaker = False
@@ -105,7 +108,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                         if not plot_stats:
                             print(f"{new_ant} getting reset")
                         new_ant.reset_to_last_color_change_state()
-                        
+                        n_matchings[new_ant.number] = n_matchings[new_ant.number][:len(new_ant.history_vertices) - 1]
                         break
 
                     choice_vertex = rd.choice(list(possible_vertices))
@@ -118,14 +121,17 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                         choice_vertex = invert_tuple(generate_source(n))
                         break
                     
-                    
                     '''
                     if the edge to the chosen vertex is the not of the same colour as the prev travelled edge, 
                     accept the colour change and keep track of it.
                     '''
                     
-                if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
+                if choice_vertex == invert_tuple(generate_source(n)):#Check if the choice_vertex is the end vertex
+                    for ind in n_matchings_default:
+                        if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
+                            n_matchings[new_ant.number].append(ind)
                     new_ant.add_to_visited(choice_vertex)
+                    print("n_matchings is ", n_matchings[new_ant.number])
                     if not plot_stats:
                         print(f"{new_ant} reached the end vertex first time")
                     
@@ -137,11 +143,20 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
 
                     breaker = True               
                     break        
-
+                
+                for ind in n_matchings_default:
+                    if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
+                        n_matchings[new_ant.number].append(ind)
                 #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
                 new_ant.add_to_visited(choice_vertex)
+               
+                
 
                 if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
+                    for ind in n_matchings_default:
+                        if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
+                            n_matchings[new_ant.number].append(ind)
+                    print("n_matchings is ",n_matchings[new_ant.number])
                     new_ant.add_to_visited(choice_vertex)
                     if not plot_stats:
                         print(f"{new_ant} reached the end vertex")
@@ -157,4 +172,4 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
         return ((-1, -1),501)
     
 
-print(run_ants_on_hypercube_random_colors(7,10, True, False))
+print(run_ants_on_hypercube_random_colors(n=5,num_ants=7, plot_network_graph=True, plot_stats=False))

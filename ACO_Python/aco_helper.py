@@ -4,6 +4,7 @@ from networkx.generators.random_graphs import fast_gnp_random_graph
 import numpy as np
 import random as rd
 import copy
+import math
 from numpy import inf
 import sys
 import dataclasses
@@ -110,6 +111,22 @@ def random_colouring(hypercube_main):
             del hypercube[invert_tuple(random_vertex_end)]
     
     return edge_colours
+
+def invert_num(n):
+    if n ==0: return 1
+    return 0
+
+def generate_n_matchings(adj_list):
+    n = int(math.log(len(adj_list),2))
+    ans = {}
+    for i in range(n):
+        ans[i] = {key:list(key) for key in adj_list}
+
+    for ind in ans:
+        for key, value in ans[ind].items(): 
+            value[ind] = invert_num(value[ind])
+            ans[ind][key] = tuple(value)
+    return ans
 
 # @dataclasses
 class Ant:
