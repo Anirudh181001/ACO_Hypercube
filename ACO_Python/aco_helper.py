@@ -128,7 +128,39 @@ def generate_n_matchings(adj_list):
             ans[ind][key] = tuple(value)
     return ans
 
-# @dataclasses
+def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices=None):
+    curr_vertex = ant.last_visited
+    def is_same_col(ant, choice_vertex, colored_adj_list):
+        curr_col = ant.curr_color
+        if curr_vertex in colored_adj_list[curr_col]: 
+            if choice_vertex in colored_adj_list[curr_col][curr_vertex]:
+                return True
+            return False
+    probs = {} #keys -> probs; vals -> connected vertices
+    sumprob=0
+    n = int(math.log(len(adj_list),2))
+    for j in range(n if the_var==False else len(possible_vertices)): #sum of all the paths the ant can take ( denominator )
+
+        temp_connected_vertex = adj_list[curr_vertex][j] if the_var==False else possible_vertices[j] #one of the connected vertices
+        same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
+        dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
+        sumprob += ((1/dist_from_end)**alpha)*(same_col_weight**beta) 
+
+    for j in range(n if the_var==False else len(possible_vertices)): #probability for each path
+
+        temp_connected_vertex = adj_list[curr_vertex][j] if the_var==False else possible_vertices[j] #one of the connected vertices
+        same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
+        dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
+        probs_key = (((1/dist_from_end)**alpha)*(same_col_weight**beta))/sumprob
+        if probs_key not in probs:
+            probs[probs_key] = [temp_connected_vertex]
+        else:
+            probs[probs_key].append(temp_connected_vertex)
+
+    probs = dict(sorted(probs.items(), key=lambda item: item[0]))
+    return probs
+
+
 class Ant:
     def __init__(self, number, curr_color = None) -> None:
         self.has_changed_col = False
@@ -154,6 +186,7 @@ class Ant:
         self.has_changed_col = True
         
     def add_to_visited(self, end_vertex):
+    
         self.history_vertices.append(end_vertex)
         if not self.has_changed_col:
             self.last_vertex_before_color_change = end_vertex
@@ -165,6 +198,7 @@ class Ant:
     def reset_to_last_color_change_state(self):
         self.num_resets += 1
         self.last_visited = self.last_vertex_before_color_change
+        self.is_violated = True
         self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_vertex_before_color_change)+1]
         self.has_changed_col = False
         self.add_to_history_colours(get_opp_color(self.curr_color))
@@ -178,7 +212,7 @@ class Ant:
         print(f"self.last_visited: {self.last_visited}")
         print(f"self.history_colours: {self.history_colours}")
         print(f"self.last_vertex_before_color_change: {self.last_vertex_before_color_change}")
-
+        return
 
 def get_col(adj_list_random_colour, start_vertex, end_vertex):
     if start_vertex in adj_list_random_colour['red'] and end_vertex in adj_list_random_colour['red'][start_vertex]:

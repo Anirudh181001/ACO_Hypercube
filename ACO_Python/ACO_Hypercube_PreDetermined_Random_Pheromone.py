@@ -12,13 +12,24 @@ from tqdm import tqdm
 import time
 from pyvis.network import Network
 
-def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
+def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
     start = True
     def generate_values_to_plot(new_ant):
         path_length = len(new_ant.history_vertices) - new_ant.num_resets
         return new_ant.number, path_length
     n_matchings = {i:[] for i in range(num_ants)}
+    alpha = 2
+    beta = 1
     
+    def select_choice_vertex(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices = None):
+        probs = calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices)
+        random_num = rd.random()
+
+        cumsum_probs = dict(zip(np.cumsum(np.multiply(list(probs.keys()), [len(i) for i in probs.values()])), list(probs.values())))
+        for prob in cumsum_probs:
+            if random_num < prob:
+                return rd.choice(cumsum_probs[prob])
+
         
     #Initialize variables
     def initialize(n, num_ants):
@@ -54,12 +65,11 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
         currloc = generate_source(n) # n-tuple of zeros (origin)
         iterations = 500
         breaker = False
-        
+                
         #initialize ants 
         ants_list = []
         for i in range(num_ants):
             ants_list.append(Ant(i, None))
-
 
         #The fun begins
         for iter in range(iterations):
@@ -83,7 +93,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
 
                 else:
                     #try to continue colour 
-                    choice_vertex = rd.choice(adj_list[new_ant.last_visited])
+                    choice_vertex = select_choice_vertex(new_ant, adj_list, adj_list_random_colour, alpha, beta)
                     
                     if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or ((choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited]) and not new_ant.has_changed_col)):
                         new_ant.set_has_changed_col()
@@ -111,7 +121,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                         n_matchings[new_ant.number] = n_matchings[new_ant.number][:len(new_ant.history_vertices) - 1]
                         break
 
-                    choice_vertex = rd.choice(list(possible_vertices))
+                    choice_vertex = select_choice_vertex(new_ant, adj_list, adj_list_random_colour, alpha, beta, list(possible_vertices))
                     if ((new_ant.last_visited not in adj_list_random_colour[new_ant.curr_color]) or (choice_vertex not in adj_list_random_colour[new_ant.curr_color][new_ant.last_visited])):
                         new_ant.set_has_changed_col()
                         new_ant.set_curr_color(get_opp_color(new_ant.curr_color))
@@ -149,9 +159,6 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                         n_matchings[new_ant.number].append(ind)
                 #Keep track of all the edges visited by the ant, and the corresponding edges that will be visited by the blue ants in dictionary
                 new_ant.add_to_visited(choice_vertex)
-               
-                
-
                 if choice_vertex == invert_tuple(generate_source(n)): #Check if the choice_vertex is the end vertex
                     for ind in n_matchings_default:
                         if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
@@ -171,5 +178,3 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
     if plot_stats:
         return ((-1, -1),501)
     
-
-print(run_ants_on_hypercube_random_colors(n=5,num_ants=7, plot_network_graph=True, plot_stats=False))
