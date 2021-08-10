@@ -15,7 +15,7 @@ from pyvis.network import Network
 def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
     start = True
     def generate_values_to_plot(new_ant):
-        path_length = len(new_ant.history_vertices) - new_ant.num_resets
+        path_length = len(new_ant.history_vertices) - new_ant.num_resets -1
         return new_ant.number, path_length
     n_matchings = {i:[] for i in range(num_ants)}
     
@@ -132,8 +132,9 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                         if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
                             n_matchings[new_ant.number].append(ind)
                     new_ant.add_to_visited(choice_vertex)
-                    print("n_matchings is ", n_matchings[new_ant.number])
+                    # print("n_matchings is ", n_matchings[new_ant.number])
                     if not plot_stats:
+                        print("n_matchings is ", n_matchings[new_ant.number])
                         print(f"{new_ant} reached the end vertex first time")
                     
                     if plot_stats:
@@ -155,9 +156,10 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                     for ind in n_matchings_default:
                         if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
                             n_matchings[new_ant.number].append(ind)
-                    print("n_matchings is ",n_matchings[new_ant.number])
+                    # print("n_matchings is ",n_matchings[new_ant.number])
                     new_ant.add_to_visited(choice_vertex)
                     if not plot_stats:
+                        print("n_matchings is ",n_matchings[new_ant.number])
                         print(f"{new_ant} reached the end vertex")
                     
                     if plot_stats: 

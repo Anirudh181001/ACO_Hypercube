@@ -16,7 +16,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
     start = True
     def generate_values_to_plot(new_ant):
         path_length = len(new_ant.history_vertices) - new_ant.num_resets
-        return new_ant.number, path_length
+        return new_ant.number, path_length -1
     n_matchings = {i:[] for i in range(num_ants)}
     alpha = 2
     beta = 1
@@ -141,9 +141,10 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                         if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
                             n_matchings[new_ant.number].append(ind)
                     new_ant.add_to_visited(choice_vertex)
-                    print("n_matchings is ", n_matchings[new_ant.number])
+                    # print("n_matchings is ", n_matchings[new_ant.number])
                     if not plot_stats:
                         print(f"{new_ant} reached the end vertex first time")
+                        print("n_matchings is ",n_matchings[new_ant.number])
                     
                     if plot_stats:
                         return generate_values_to_plot(new_ant), iter
@@ -163,10 +164,11 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                     for ind in n_matchings_default:
                         if n_matchings_default[ind][new_ant.last_visited] == choice_vertex:
                             n_matchings[new_ant.number].append(ind)
-                    print("n_matchings is ",n_matchings[new_ant.number])
+                    # print("n_matchings is ",n_matchings[new_ant.number])
                     new_ant.add_to_visited(choice_vertex)
                     if not plot_stats:
                         print(f"{new_ant} reached the end vertex")
+                        print("n_matchings is ",n_matchings[new_ant.number])
                     
                     if plot_stats: 
                         return generate_values_to_plot(new_ant), iter
