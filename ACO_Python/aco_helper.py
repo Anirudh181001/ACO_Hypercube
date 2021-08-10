@@ -139,16 +139,16 @@ def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_v
     probs = {} #keys -> probs; vals -> connected vertices
     sumprob=0
     n = int(math.log(len(adj_list),2))
-    for j in range(n if the_var==False else len(possible_vertices)): #sum of all the paths the ant can take ( denominator )
+    for j in range(n if not possible_vertices else len(possible_vertices)): #sum of all the paths the ant can take ( denominator )
 
-        temp_connected_vertex = adj_list[curr_vertex][j] if the_var==False else possible_vertices[j] #one of the connected vertices
+        temp_connected_vertex = adj_list[curr_vertex][j] if not possible_vertices else possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
         dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
         sumprob += ((1/dist_from_end)**alpha)*(same_col_weight**beta) 
 
-    for j in range(n if the_var==False else len(possible_vertices)): #probability for each path
+    for j in range(n if not possible_vertices else len(possible_vertices)): #probability for each path
 
-        temp_connected_vertex = adj_list[curr_vertex][j] if the_var==False else possible_vertices[j] #one of the connected vertices
+        temp_connected_vertex = adj_list[curr_vertex][j] if not possible_vertices else possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
         dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
         probs_key = (((1/dist_from_end)**alpha)*(same_col_weight**beta))/sumprob

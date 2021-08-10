@@ -177,4 +177,5 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                     break  
     if plot_stats:
         return ((-1, -1),501)
-    
+
+# print(run_ants_on_hypercube_random_colors_optimized(n=5,num_ants=7, plot_network_graph=True, plot_stats=False))
