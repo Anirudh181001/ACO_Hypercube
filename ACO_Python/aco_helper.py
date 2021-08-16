@@ -233,5 +233,4 @@ def change_to_gray(color):
         return "#FFC2CB"
 
     
-    
-    
+#JUST ADDING FOR FUN!
