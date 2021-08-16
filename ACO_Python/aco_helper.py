@@ -128,7 +128,7 @@ def generate_n_matchings(adj_list):
             ans[ind][key] = tuple(value)
     return ans
 
-def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices=None):
+def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices):
     curr_vertex = ant.last_visited
     def is_same_col(ant, choice_vertex, colored_adj_list):
         curr_col = ant.curr_color
@@ -139,16 +139,16 @@ def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_v
     probs = {} #keys -> probs; vals -> connected vertices
     sumprob=0
     n = int(math.log(len(adj_list),2))
-    for j in range(n if not possible_vertices else len(possible_vertices)): #sum of all the paths the ant can take ( denominator )
+    for j in range(len(possible_vertices)): #sum of all the paths the ant can take ( denominator )
 
-        temp_connected_vertex = adj_list[curr_vertex][j] if not possible_vertices else possible_vertices[j] #one of the connected vertices
+        temp_connected_vertex = possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
         dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
         sumprob += ((1/dist_from_end)**alpha)*(same_col_weight**beta) 
 
-    for j in range(n if not possible_vertices else len(possible_vertices)): #probability for each path
+    for j in range(len(possible_vertices)): #probability for each path
 
-        temp_connected_vertex = adj_list[curr_vertex][j] if not possible_vertices else possible_vertices[j] #one of the connected vertices
+        temp_connected_vertex = possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
         dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
         probs_key = (((1/dist_from_end)**alpha)*(same_col_weight**beta))/sumprob
@@ -169,7 +169,6 @@ class Ant:
         self.history_vertices = []
         self.is_violated = False
         self.last_visited = {}
-        self.num_resets = 0
         self.history_colours = []
         self.last_vertex_before_color_change = None
 
@@ -196,7 +195,6 @@ class Ant:
         self.history_colours.append(col) 
         
     def reset_to_last_color_change_state(self):
-        self.num_resets += 1
         self.last_visited = self.last_vertex_before_color_change
         # self.is_violated = True
         self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_vertex_before_color_change)+1]
@@ -215,7 +213,7 @@ class Ant:
         return
 
     def get_path_len(self):
-        path_length = len(self.history_vertices) - self.num_resets
+        path_length = len(self.history_vertices)
         return self.number, path_length -1
 
 

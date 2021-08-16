@@ -1,4 +1,5 @@
 # from operator import invert
+from networkx.algorithms.centrality.load import newman_betweenness_centrality
 import numpy as np
 import random as rd
 from numpy.lib.utils import source
@@ -30,7 +31,7 @@ def initialize(n, num_ants, plot_stats):
     return num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default
 
 
-def select_choice_vertex(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices = None):
+def select_choice_vertex(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices):
     probs = calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices)
     random_num = rd.random()
     cumsum_probs = dict(zip(np.cumsum(np.multiply(list(probs.keys()), [len(i) for i in probs.values()])), list(probs.values())))
@@ -57,21 +58,21 @@ def plot_network(ant, adj_list_random_colour):
 def ant_first_step(ant, start_vertex, adj_list, adj_list_random_colour):
     choice_vertex = rd.choice(adj_list[start_vertex])
     ant.add_to_visited(start_vertex)
-    if choice_vertex in adj_list_random_colour['red'].get(start_vertex):
+    if choice_vertex in adj_list_random_colour['red'].get(start_vertex,[]):
         ant.set_curr_color('red')
     else:
         ant.set_curr_color('blue')
 
 
 def find_possible_vertices(ant, adj_list, adj_list_random_colour):
-    possibe_vertices = set(adj_list[ant.last_visited]) - set(ant.history_vertices)
+    possible_vertices = set(adj_list[ant.last_visited]) - set(ant.history_vertices)
     if ant.has_changed_col:
         temp_var = set()
-        for i in possibe_vertices:
+        for i in possible_vertices:
             if i not in adj_list_random_colour[ant.curr_color][ant.last_visited]:
                 temp_var.add(i)
-        possibe_vertices -= temp_var
-    return possibe_vertices
+        possible_vertices -= temp_var
+    return possible_vertices
 
 
 def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
@@ -95,38 +96,25 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
             break
         
         for ant_number in range(num_ants):
+            if iter==499:
+                plot_network(curr_ant, adj_list_random_colour, n_matchings[curr_ant.number])
+                continue
+            
+
             curr_ant = ants_list[ant_number]
             
             if iter == 0:
                 ant_first_step(curr_ant, start_vertex, adj_list, adj_list_random_colour)
                 continue
             else:
-                choice_vertex = select_choice_vertex(curr_ant, adj_list, adj_list_random_colour, alpha, beta)
-                test_condition_1 = curr_ant.last_visited not in adj_list_random_colour[curr_ant.curr_color]
-                print(f"{test_condition_1 = }")
-                test_condition_2 = choice_vertex not in adj_list_random_colour[curr_ant.curr_color][curr_ant.last_visited]
-                print(f"{test_condition_2 = }")
-                if test_condition_1 or test_condition_2 and not curr_ant.has_changed_col:
-                    # check this condition again...
-                    curr_ant.set_has_changed_col()
-                    curr_ant.set_curr_color(get_opp_color(curr_ant.curr_color))
-                    if not plot_stats:
-                        print(f"{curr_ant} is violated: ", curr_ant.is_violated)
-                    
-
-            # Make sure the choice_edge has not already been visited. If the choice vertex in history, find a new one...
-            if ((curr_ant.last_visited not in adj_list_random_colour[curr_ant.curr_color]) or (choice_vertex not in adj_list_random_colour[curr_ant.curr_color][curr_ant.last_visited] and curr_ant.has_changed_col)):
-                # possible vertices are the vertices that the ant has not visited before
-                # and vertices that would not violate the colour change rule
                 possible_vertices = find_possible_vertices(curr_ant, adj_list, adj_list_random_colour)
-  
                 if len(possible_vertices) == 0: 
                     #need to reset to last colour change
                     if not plot_stats:
                         print(f"{curr_ant} getting reset")
                     curr_ant.reset_to_last_color_change_state()
                     n_matchings[curr_ant.number] = n_matchings[curr_ant.number][:len(curr_ant.history_vertices) - 1]
-                    break
+                    continue
                
                 elif invert_tuple(generate_source(n)) in possible_vertices:
                     #if the end vertex (1-tuple) is in the possible vertices, then that is the choice
@@ -134,11 +122,11 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
 
                 else:
                     choice_vertex = select_choice_vertex(curr_ant, adj_list, adj_list_random_colour, alpha, beta, list(possible_vertices))
-                    if ((curr_ant.last_visited not in adj_list_random_colour[curr_ant.curr_color]) or (choice_vertex not in adj_list_random_colour[curr_ant.curr_color][curr_ant.last_visited])):
+                    if (choice_vertex not in adj_list_random_colour[curr_ant.curr_color].get(curr_ant.last_visited, [])):
                         curr_ant.set_has_changed_col()
                         curr_ant.set_curr_color(get_opp_color(curr_ant.curr_color))
-                               
 
+                               
             for ind in n_matchings_default:
                 if n_matchings_default[ind][curr_ant.last_visited] == choice_vertex:
                     n_matchings[curr_ant.number].append(ind)
@@ -149,7 +137,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                 if plot_network_graph:
                     plot_network(curr_ant, adj_list_random_colour)
                 if plot_stats: 
-                    return curr_ant.get_path_len(), iter
+                    return curr_ant.get_path_len(), iter, n_matchings[curr_ant.number]
                 else:
                     print(f"{curr_ant} reached the end vertex")
                     print("n_matchings is ", n_matchings[curr_ant.number])
@@ -157,7 +145,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                 break  
     
     if plot_stats:
-        return ((-1, -1),501)
+        return ((np.NaN, np.NaN),501, np.NaN)
 
 
 if __name__ == '__main__':
