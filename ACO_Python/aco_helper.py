@@ -198,7 +198,7 @@ class Ant:
     def reset_to_last_color_change_state(self):
         self.num_resets += 1
         self.last_visited = self.last_vertex_before_color_change
-        self.is_violated = True
+        # self.is_violated = True
         self.history_vertices = self.history_vertices[: self.history_vertices.index(self.last_vertex_before_color_change)+1]
         self.has_changed_col = False
         self.add_to_history_colours(get_opp_color(self.curr_color))
@@ -214,8 +214,13 @@ class Ant:
         print(f"self.last_vertex_before_color_change: {self.last_vertex_before_color_change}")
         return
 
+    def get_path_len(self):
+        path_length = len(self.history_vertices) - self.num_resets
+        return self.number, path_length -1
+
+
 def get_col(adj_list_random_colour, start_vertex, end_vertex):
-    if start_vertex in adj_list_random_colour['red'] and end_vertex in adj_list_random_colour['red'][start_vertex]:
+    if end_vertex in adj_list_random_colour['red'].get(start_vertex, []):
         return 'red'
     else:
         return 'blue'
