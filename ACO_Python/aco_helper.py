@@ -9,6 +9,12 @@ from numpy import inf
 import sys
 import dataclasses
 
+def get_opp_color(color):
+    if color == "blue":
+        return "red"
+    else:
+        return "blue"
+    
 def make_sym_matrix(n,vals):
     m = np.zeros([n,n])
     xs,ys = np.triu_indices(n,k=1)
@@ -111,6 +117,63 @@ def random_colouring(hypercube_main):
             del hypercube[invert_tuple(random_vertex_end)]
     
     return edge_colours
+    
+
+def invert_index(ind, vertex):
+    vertex_final = list(vertex)
+    if vertex_final[ind] == 0:
+        vertex_final[ind] = 1 
+    else: vertex_final[ind] = 0
+    return tuple(vertex_final)
+
+
+def layered_colouring(hypercube_main, n):
+    color_choices = ['red', "blue"]
+    chosen_color = rd.choice(color_choices)
+    print(chosen_color)
+    edge_colors = {'red':{}, 'blue':{}}
+    edge_colors[chosen_color][generate_source(n)] = []
+    hypercube = {key:copy.deepcopy(value) for key,value in hypercube_main.items()}
+    layer = 0
+    start_vertex = generate_source(n)
+    while len(hypercube) != 0:
+        for vertex in list(hypercube.keys()):
+            if vertex not in hypercube:
+                continue
+            print(f"{vertex = }")
+            if sum(list(vertex)) == layer:
+                if layer%2 == 0:
+                    color = chosen_color
+                else:
+                    color = get_opp_color(chosen_color)
+                if vertex not in edge_colors[color]:
+                    edge_colors[color][vertex] = []
+                for v in hypercube[vertex]:
+                    print(f"{v = }")
+                    if vertex not in edge_colors[get_opp_color(color)].get(v, {}):
+                        print(f"{v} is not in opp edge cols")
+                        edge_colors[color][vertex].append(v)
+                        if v not in edge_colors[color]: edge_colors[color][v] = [vertex] 
+                        else :  edge_colors[color][v].append(vertex)
+                        if invert_tuple(v) not in edge_colors[get_opp_color(color)]: edge_colors[get_opp_color(color)][invert_tuple(vertex)] = [invert_tuple(v)]
+                        else: edge_colors[get_opp_color(color)][invert_tuple(vertex)].append(invert_tuple(v))
+                        if invert_tuple(v) not in edge_colors[get_opp_color(color)]: edge_colors[get_opp_color(color)][invert_tuple(v)] = [invert_tuple(vertex)]
+                        else: edge_colors[get_opp_color(color)][invert_tuple(v)].append(invert_tuple(vertex))
+                        print("edge cols is ",edge_colors)
+                    else:
+                        print(f"{v} is in opp edge cols")
+                        print("edge cols is ",edge_colors)
+                        continue
+                    # print(f"popping {v}")
+                    # hypercube[vertex].remove(v)
+                        
+                print(f"popping {vertex} and {invert_tuple(vertex)}")
+                del hypercube[vertex]
+                del hypercube[invert_tuple(vertex)]
+        layer += 1    
+    return edge_colors
+
+print(layered_colouring(make_hypercube_matrix(2), 2))
 
 def invert_num(n):
     if n ==0: return 1
@@ -223,11 +286,6 @@ def get_col(adj_list_random_colour, start_vertex, end_vertex):
     else:
         return 'blue'
 
-def get_opp_color(color):
-    if color == "blue":
-        return "red"
-    else:
-        return "blue"
     
 def change_to_gray(color):
     if color == 'blue':
