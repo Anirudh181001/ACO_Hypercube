@@ -137,7 +137,7 @@ def layered_colouring(hypercube_main, n):
     hypercube = {key:copy.deepcopy(value) for key,value in hypercube_main.items()}
     layer = 0
     print( f"{edge_colors = }")
-    while len(hypercube) != 0 and layer < n - 1:
+    while len(hypercube) != 0 and layer < n - 2:
         for vertex in hypercube_main:
             print(f"{layer = }")
             if vertex not in hypercube:
