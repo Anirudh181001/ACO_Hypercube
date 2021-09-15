@@ -8,6 +8,11 @@ import math
 from numpy import inf
 import sys
 import dataclasses
+from scipy.spatial import distance
+
+def hamming_distance(arr_1,arr_2):
+    norm_dist = distance.hamming(arr_1, arr_2)
+    return len(arr_1) * norm_dist
 
 def get_opp_color(color):
     if color == "blue":
@@ -69,8 +74,9 @@ def invert_tuple(vertex):
 
 def generate_source(n):
     ans = []
+    choices = [0,1]
     for i in range(n):
-        ans.append(0)
+        ans.append(rd.choice(choices))
     return tuple(ans)
 
 def random_colouring(hypercube_main):
@@ -131,19 +137,15 @@ def invert_index(ind, vertex):
 def layered_colouring(hypercube_main, n):
     color_choices = ['red', "blue"]
     chosen_color = rd.choice(color_choices)
-    print(f"{chosen_color =}")
     edge_colors = {'red':{}, 'blue':{}}
     edge_colors[chosen_color][generate_source(n)] = []
     hypercube = {key:copy.deepcopy(value) for key,value in hypercube_main.items()}
     layer = 0
-    print( f"{edge_colors = }")
-    while len(hypercube) != 0 and layer < n - 2:
+
+    while len(hypercube) != 0 and layer < n//2:
         for vertex in hypercube_main:
-            print(f"{layer = }")
             if vertex not in hypercube:
-                print(f'vertex {vertex} is not in hypercube')
                 continue
-            print(f"-- start -- {vertex = }")
             if sum(list(vertex)) == layer:
                 if layer%2 == 0:
                     color = chosen_color
@@ -153,46 +155,48 @@ def layered_colouring(hypercube_main, n):
                     edge_colors[color][vertex] = []
 
                 for v in hypercube[vertex]: # for the connected vertices 
-                    print(f"{v = }")
                     if vertex not in edge_colors[get_opp_color(color)].get(v, [] ):
-                        print(f"{v} is not in opp edge cols ")
                         edge_colors[color][vertex].append(v)
                         if v not in edge_colors[color]: 
-                            print('1a') 
                             edge_colors[color][v] = [vertex] 
-                        else:
-                            print('1b')   
+                        else:   
                             edge_colors[color][v].append(vertex)
 
                         if invert_tuple(vertex) not in edge_colors[get_opp_color(color)]: 
-                            print('2a') 
                             edge_colors[get_opp_color(color)][invert_tuple(vertex)] = [invert_tuple(v)]
-                        else: 
-                            print('2b') 
+                        else:  
                             edge_colors[get_opp_color(color)][invert_tuple(vertex)].append(invert_tuple(v))
 
                         if invert_tuple(v) not in edge_colors[get_opp_color(color)]:
-                            print('3a') 
                             edge_colors[get_opp_color(color)][invert_tuple(v)] = [invert_tuple(vertex)]
                         else: 
-                            print('3b') 
                             edge_colors[get_opp_color(color)][invert_tuple(v)].append(invert_tuple(vertex))
-
-                        print("edge cols is ",edge_colors)
                     else:
-                        print(f"{v} is in opp edge cols")
-                        print("edge cols is ",edge_colors)
                         continue
-                    # print(f"popping {v}")
-                    # hypercube[vertex].remove(v)
-                        
-                print(f"popping {vertex} and {invert_tuple(vertex)}")
+
                 del hypercube[vertex]
                 del hypercube[invert_tuple(vertex)]
-        layer += 1    
+        layer += 1
+    if n%2 ==1:
+        mid_layer = (n)//2 
+        for vertex in hypercube:
+            if sum(list(vertex)) == mid_layer:     
+                for v in hypercube_main[vertex]:
+                    if vertex not in edge_colors[color].get(v, []):
+                        if vertex not in edge_colors[get_opp_color(color)]:
+                            edge_colors[get_opp_color(color)][vertex] = []
+                            
+                        if invert_tuple(vertex) not in edge_colors[color]:
+                            edge_colors[color][invert_tuple(vertex)] = []
+                            
+                        edge_colors[get_opp_color(color)][vertex].append(v)
+                        edge_colors[color][invert_tuple(vertex)].append(invert_tuple(v))
+                        edge_colors[get_opp_color(color)][v].append(vertex)
+                        edge_colors[color][invert_tuple(v)].append(invert_tuple(vertex))
+                         
     return edge_colors
 
-print(layered_colouring(make_hypercube_matrix(4), 4))
+# layered_colouring(make_hypercube_matrix(3), 3)
 
 def invert_num(n):
     if n ==0: return 1
@@ -210,7 +214,7 @@ def generate_n_matchings(adj_list):
             ans[ind][key] = tuple(value)
     return ans
 
-def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices):
+def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices, end_vertex):
     curr_vertex = ant.last_visited
     def is_same_col(ant, choice_vertex, colored_adj_list):
         curr_col = ant.curr_color
@@ -225,14 +229,14 @@ def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_v
 
         temp_connected_vertex = possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
-        dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
+        dist_from_end = n - hamming_distance(temp_connected_vertex, end_vertex) if n - hamming_distance(end_vertex,temp_connected_vertex) != 0 else 0.5
         sumprob += ((1/dist_from_end)**alpha)*(same_col_weight**beta) 
 
     for j in range(len(possible_vertices)): #probability for each path
 
         temp_connected_vertex = possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
-        dist_from_end = n - sum(temp_connected_vertex) if n - sum(temp_connected_vertex) != 0 else 0.5
+        dist_from_end = n - hamming_distance(end_vertex,temp_connected_vertex) if n - hamming_distance(end_vertex,temp_connected_vertex) != 0 else 0.5
         probs_key = (((1/dist_from_end)**alpha)*(same_col_weight**beta))/sumprob
         if probs_key not in probs:
             probs[probs_key] = [temp_connected_vertex]

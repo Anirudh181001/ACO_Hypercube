@@ -23,7 +23,7 @@ def initialize(n, num_ants, plot_stats):
     if not plot_stats:
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
     tic = time.time()
-    adj_list_random_colour = random_colouring(adj_list) #Randomized colouring of the n-hypercube graph
+    adj_list_random_colour = layered_colouring(adj_list,n) #Randomized colouring of the n-hypercube graph
     toc = time.time()
     n_matchings_default = generate_n_matchings(adj_list)
     if not plot_stats:
@@ -109,9 +109,9 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                     n_matchings[curr_ant.number] = n_matchings[curr_ant.number][:len(curr_ant.history_vertices) - 1]
                     continue
                
-                elif invert_tuple(generate_source(n)) in possible_vertices:
+                elif invert_tuple(start_vertex) in possible_vertices:
                     #if the end vertex (1-tuple) is in the possible vertices, then that is the choice
-                    choice_vertex = invert_tuple(generate_source(n))
+                    choice_vertex = invert_tuple(start_vertex)
 
                 else:
                     choice_vertex = select_choice_vertex(list(possible_vertices))
@@ -125,7 +125,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                     n_matchings[curr_ant.number].append(ind)
             curr_ant.add_to_visited(choice_vertex)
 
-            if choice_vertex == invert_tuple(generate_source(n)): 
+            if choice_vertex == invert_tuple(start_vertex): 
                 #Check if the choice_vertex is the end vertex
                 if plot_network_graph:
                     plot_network(curr_ant, adj_list_random_colour)
