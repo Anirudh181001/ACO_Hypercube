@@ -96,7 +96,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
             break
         
         for ant_number in range(num_ants):
-            if iter==499:
+            if iter==999:
                 plot_network(curr_ant, adj_list_random_colour)
                 continue
             
@@ -145,8 +145,8 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                 break  
     
     if plot_stats:
-        return ((np.NaN, np.NaN),501, np.NaN)
+        return ((np.NaN, np.NaN),1001, np.NaN)
 
 
 if __name__ == '__main__':
-    print(run_ants_on_hypercube_random_colors_optimized(n=4, num_ants=5, plot_network_graph=True, plot_stats=False))
+    print(run_ants_on_hypercube_random_colors_optimized(n=12, num_ants=15, plot_network_graph=False, plot_stats=True))
