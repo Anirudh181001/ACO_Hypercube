@@ -196,6 +196,8 @@ def layered_colouring(hypercube_main, n):
                          
     return edge_colors
 
+
+
 # layered_colouring(make_hypercube_matrix(3), 3)
 
 def invert_num(n):
