@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
 from pyvis.network import Network
-
+import queue
 #Initialize variables
 def initialize(n, num_ants, plot_stats):
     num_vertices = 2**n
@@ -24,86 +24,100 @@ def initialize(n, num_ants, plot_stats):
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
     return num_vertices, num_ants, adj_list # ,adj_list_random_colour, n_matchings_default
 
-def color_three_layers_by_batch(hypercube, start_vertex, edge_colours):
+
+def add_to_edge_colors(u,v, curr_col, edge_cols):
+    u_inv = invert_tuple(u)
+    v_inv = invert_tuple(v)
+    curr_col_inv = get_opp_color(curr_col)
+    count = 0
+    if u in edge_cols[curr_col]:
+        edge_cols[curr_col][u].append(v)
+    else:
+        edge_cols[curr_col][u] = [v]
+        
+    if u_inv in edge_cols[curr_col_inv]:
+        edge_cols[curr_col_inv][u_inv].append(v_inv)
+    else:
+        edge_cols[curr_col_inv][u_inv] =[v_inv]
+
+    if v in edge_cols[curr_col]:
+        edge_cols[curr_col][v].append(u)
+    else:
+        edge_cols[curr_col][v] = [u]
+
+    if v_inv in edge_cols[curr_col_inv]:
+        edge_cols[curr_col_inv][v_inv].append(u_inv)
+    else:
+        edge_cols[curr_col_inv][v_inv] =[u_inv]
+
+    return edge_cols
+    
+    
+def edge_visited(edge_colours,u,v):
+    return v in edge_colours['red'].get(u,[]) or v in edge_colours['blue'].get(u,[])
+
+def color_three_layers_by_batch(hypercube, start_vertex, edge_colours, new_start_vertices):
     color_choices = ['red', "blue"]
-    print("start vertex is ", start_vertex)
     count = 0
     n = len(start_vertex)
-    vertices_to_be_deleted = []
-    num_vertices_in_third_layer = n*(n-1)**2
-    new_start_vertex_ind = rd.randint(0,num_vertices_in_third_layer-1)
-    new_start_vertex = -1
+    chosen_1_stack = {}
+    chosen_2_stack = {}
     for choice_vertex_1 in hypercube[start_vertex]:
-        #first layer (randomly colouring edge colours) + opposite edges with opposite colours
-        if choice_vertex_1 not in hypercube:
+        if edge_visited(edge_colours,start_vertex,choice_vertex_1):
             continue
-        chosen_color_1 = rd.choice(color_choices)
-        edge_colours[chosen_color_1][start_vertex] = [choice_vertex_1]
-        edge_colours[chosen_color_1][choice_vertex_1] = [start_vertex]
-        edge_colours[get_opp_color(chosen_color_1)][invert_tuple(choice_vertex_1)] = [invert_tuple(start_vertex)]
-        edge_colours[get_opp_color(chosen_color_1)][invert_tuple(start_vertex)] = [invert_tuple(choice_vertex_1)]
-        print(f"choice vertex 1 is {choice_vertex_1}")
-        print("edge_cols is ", edge_colours)
+        chosen_col1 = rd.choice(color_choices)
+        chosen_1_stack[choice_vertex_1] = chosen_col1
+        add_to_edge_colors(start_vertex,choice_vertex_1,chosen_col1,edge_colours)
+    
+    for choice_vertex_1 in chosen_1_stack:
         for choice_vertex_2 in hypercube[choice_vertex_1]:
-            if choice_vertex_2 not in hypercube:
+            if edge_visited(edge_colours,choice_vertex_1,choice_vertex_2):
                 continue
-            if hamming_distance(start_vertex, choice_vertex_2) !=2 or (choice_vertex_2 in edge_colours["red"].get(choice_vertex_1,[]) or choice_vertex_2 in edge_colours["blue"].get(choice_vertex_1,[])):
-                continue
-            chosen_color_2 = get_opp_color(chosen_color_1)
-            edge_colours[chosen_color_2][choice_vertex_1] = [choice_vertex_2]
-            edge_colours[chosen_color_2][choice_vertex_2] = [choice_vertex_1]
-            edge_colours[get_opp_color(chosen_color_2)][invert_tuple(choice_vertex_2)] = [invert_tuple(choice_vertex_1)]
-            edge_colours[get_opp_color(chosen_color_2)][invert_tuple(choice_vertex_1)] = [invert_tuple(choice_vertex_2)]
-            print(f"choice vertex 2 is {choice_vertex_2}")
-            print("edge_cols is ", edge_colours)
-            for choice_vertex_3 in hypercube[choice_vertex_2]:
-                if choice_vertex_3 not in hypercube:
-                    continue
-                if hamming_distance(start_vertex, choice_vertex_3) !=3 or (choice_vertex_3 in edge_colours["red"].get(choice_vertex_2,[]) or choice_vertex_3 in edge_colours["blue"].get(choice_vertex_2,[])):
-                    continue
-                chosen_color_3 = get_opp_color(chosen_color_2)
-                edge_colours[chosen_color_3][choice_vertex_2] = [choice_vertex_3]
-                edge_colours[chosen_color_3][choice_vertex_3] = [choice_vertex_2]
-                edge_colours[get_opp_color(chosen_color_3)][invert_tuple(choice_vertex_3)] = [invert_tuple(choice_vertex_2)]
-                edge_colours[get_opp_color(chosen_color_3)][invert_tuple(choice_vertex_2)] = [invert_tuple(choice_vertex_3)]
-                print(f"choice vertex 3 is {choice_vertex_3}")
-                print("edge_cols is ", edge_colours)
-                print("hypercube is ",hypercube)
-                if count == new_start_vertex_ind:
-                    new_start_vertex = choice_vertex_3
-                count+=1
-            #remove layer 2 vertices and opp
-
-            vertices_to_be_deleted+=[choice_vertex_2, invert_tuple(choice_vertex_2)]
-            print(f"{vertices_to_be_deleted=}")
+            chosen_col2 = get_opp_color(chosen_1_stack[choice_vertex_1])
+            add_to_edge_colors(choice_vertex_1,choice_vertex_2,chosen_col2,edge_colours)
+            chosen_2_stack[choice_vertex_2] = chosen_col2
             
-
-        #remove layer 1 vertices and opp
-        vertices_to_be_deleted+=[choice_vertex_1, invert_tuple(choice_vertex_1)]
-        print(f"{vertices_to_be_deleted=}")
-
-    #remove start vertex and opp
-    vertices_to_be_deleted+=[start_vertex, invert_tuple(start_vertex)]
-    print(f"{vertices_to_be_deleted=}")
-
-    for i in set(vertices_to_be_deleted):
-        print("deleting ", i)
-        del hypercube[i]
+    for choice_vertex_2 in chosen_2_stack:
+        for choice_vertex_3 in hypercube[choice_vertex_2]:
+            if edge_visited(edge_colours,choice_vertex_2,choice_vertex_3):
+                continue
+            new_start_vertices[choice_vertex_3]=True
+            chosen_col3 = get_opp_color(chosen_2_stack[choice_vertex_2])
+            add_to_edge_colors(choice_vertex_2,choice_vertex_3,chosen_col3,edge_colours)
+            
+    return new_start_vertices
+    
         
 
-    return hypercube, new_start_vertex
+def is_complete(edge_cols,n):
+    count = 0
+    num_edges = n*(2**(n-1))
+    for col,u_vertices in edge_cols.items():
+        for u,v_vertices in u_vertices.items():
+            count+=len(v_vertices)
+        break
     
+    if count == num_edges:
+        return True
+    return False
+        
 
-def adversarial_coloring(adj_list):
+def adversarial_coloring(adj_list, plot=False):
     edge_colors = {'red':{}, 'blue':{}}
     hypercube = {key:copy.deepcopy(value) for key,value in adj_list.items()}
     start_vertex = rd.choice(list(hypercube.keys()))
-    count = 0
-    
-    while len(hypercube)> 0:
-        hypercube, start_vertex = color_three_layers_by_batch(hypercube, start_vertex, edge_colors)
-    plot_network_here(edge_colors)
+    n=len(start_vertex)
+    new_start_vertices = {start_vertex:True}
+    while len(new_start_vertices)>0:
+        for key in new_start_vertices:
+            start_vertex = key
+            del new_start_vertices[key]
+            break
+        new_start_vertices = color_three_layers_by_batch(hypercube, start_vertex, edge_colors,new_start_vertices)
+    if plot:
+        plot_network_here(edge_colors)
     return edge_colors
+
         
 def plot_network_here(adj_list_random_colour):
     hypercube = nx.Graph()
@@ -112,14 +126,11 @@ def plot_network_here(adj_list_random_colour):
     g = Network(height=2000,width=2000,notebook=False)
     g.toggle_hide_edges_on_drag(False)
     g.barnes_hut()
-    
-    # ant_edges = [("".join(map(str,ant.history_vertices[i-1])), "".join(map(str,ant.history_vertices[i])), {"color": "red"}) if ("".join(map(str,ant.history_vertices[i-1])), "".join(map(str,ant.history_vertices[i])), {'color': '#FFC2CB'}) in edgelist
-    #             else  ("".join(map(str,ant.history_vertices[i-1])), "".join(map(str,ant.history_vertices[i])), {'color': 'blue'}) for i in range(1,len(ant.history_vertices))]
-    # hypercube.add_edges_from(ant_edges)    
     g.from_nx(hypercube)
     g.show("ex.html")
 
-print(adversarial_coloring(make_hypercube_matrix(3)))
+
+adversarial_coloring(make_hypercube_matrix(7))
     
 
 

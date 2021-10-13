@@ -6,6 +6,7 @@ from numpy.lib.utils import source
 import copy
 from numpy import inf
 import sys
+from ACO_Hypercube_DynamicColoring import adversarial_coloring
 from aco_helper import *
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -14,8 +15,10 @@ import time
 from pyvis.network import Network
 
 
+MODES = {"layered", "random","dynamic"}
+
 #Initialize variables
-def initialize(n, num_ants, plot_stats):
+def initialize(n, num_ants, plot_stats,mode):
     num_vertices = 2**n
     tic = time.time()
     adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
@@ -23,12 +26,17 @@ def initialize(n, num_ants, plot_stats):
     if not plot_stats:
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
     tic = time.time()
-    adj_list_random_colour = layered_colouring(adj_list, n) #Randomized colouring of the n-hypercube graph
+    if mode=="layered":
+        adj_list_colour = layered_colouring(adj_list, n) #Randomized colouring of the n-hypercube graph
+    elif mode=="random":
+        adj_list_colour = random_colouring(adj_list)
+    elif mode=="dynamic":
+        adj_list_colour = adversarial_coloring(adj_list)
     toc = time.time()
     n_matchings_default = generate_n_matchings(adj_list)
     if not plot_stats:
         print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
-    return num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default
+    return num_vertices, num_ants, adj_list, adj_list_colour, n_matchings_default
 
 
 def select_choice_vertex(ant, adj_list, colored_adj_list, alpha, beta, possible_vertices, end_vertex):
@@ -75,11 +83,11 @@ def find_possible_vertices(ant, adj_list, adj_list_random_colour):
     return possible_vertices
 
 
-def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
+def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_graph = True, plot_stats = False,mode="random"): #  returns ((ant.number, path_length), iter)
     n_matchings = {i:[] for i in range(num_ants)}
-    alpha = 2
-    beta = 1
-    num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats)
+    alpha = 5
+    beta = 0.5
+    num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats,mode)
     start_vertex = generate_source(n) # n-tuple of zeros (origin)
     iterations = 500
     breaker = False
@@ -149,4 +157,4 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
 
 
 if __name__ == '__main__':
-    print(run_ants_on_hypercube_random_colors_optimized(n=12, num_ants=15, plot_network_graph=False, plot_stats=True))
+    print(run_ants_on_hypercube_random_colors_optimized(n=5, num_ants=7, plot_network_graph=True, plot_stats=False,mode="dynamic"))

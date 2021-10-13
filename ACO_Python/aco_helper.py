@@ -231,7 +231,7 @@ def calc_hypercube_prob(ant, adj_list, colored_adj_list, alpha, beta, possible_v
 
         temp_connected_vertex = possible_vertices[j] #one of the connected vertices
         same_col_weight = 1 if is_same_col(ant, temp_connected_vertex, colored_adj_list) else 0.8
-        dist_from_end = hamming_distance(temp_connected_vertex, end_vertex) if  hamming_distance(end_vertex,temp_connected_vertex) != 0 else 0.5
+        dist_from_end = hamming_distance(temp_connected_vertex, end_vertex) if hamming_distance(end_vertex,temp_connected_vertex) != 0 else 0.5
         sumprob += ((1/dist_from_end)**alpha)*(same_col_weight**beta) 
 
     for j in range(len(possible_vertices)): #probability for each path
