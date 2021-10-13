@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
 from pyvis.network import Network
+from ACO_Hypercube_DynamicColoring import adversarial_coloring
 
+MODES = {"layered", "random","dynamic"}
 
 #Initialize variables
-def initialize(n, num_ants, plot_stats):
+def initialize(n, num_ants, plot_stats,mode):
     num_vertices = 2**n
     tic = time.time()
     adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
@@ -23,12 +25,17 @@ def initialize(n, num_ants, plot_stats):
     if not plot_stats:
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
     tic = time.time()
-    adj_list_random_colour = layered_colouring(adj_list,n) #Randomized colouring of the n-hypercube graph
+    if mode=="layered":
+        adj_list_colour = layered_colouring(adj_list, n) #Randomized colouring of the n-hypercube graph
+    elif mode=="random":
+        adj_list_colour = random_colouring(adj_list)
+    elif mode=="dynamic":
+        adj_list_colour = adversarial_coloring(adj_list)
     toc = time.time()
     n_matchings_default = generate_n_matchings(adj_list)
     if not plot_stats:
         print("Time taken to generate randomized colouring is ",toc - tic, " seconds")
-    return num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default
+    return num_vertices, num_ants, adj_list, adj_list_colour, n_matchings_default
 
 
 def select_choice_vertex(possible_vertices):
@@ -70,7 +77,7 @@ def find_possible_vertices(ant, adj_list, adj_list_random_colour):
     return possible_vertices
 
 
-def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False): #  returns ((ant.number, path_length), iter)
+def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False,mode="random"): #  returns ((ant.number, path_length), iter)
     n_matchings = {i:[] for i in range(num_ants)}
     num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats)
     start_vertex = generate_source(n) # n-tuple of zeros (origin)
