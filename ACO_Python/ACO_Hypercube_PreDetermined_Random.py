@@ -17,7 +17,7 @@ from ACO_Hypercube_DynamicColoring import adversarial_coloring
 MODES = {"layered", "random","dynamic"}
 
 #Initialize variables
-def initialize(n, num_ants, plot_stats,mode):
+def initialize(n, num_ants, plot_stats,mode="random"):
     num_vertices = 2**n
     tic = time.time()
     adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
@@ -79,7 +79,7 @@ def find_possible_vertices(ant, adj_list, adj_list_random_colour):
 
 def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, plot_stats = False,mode="random"): #  returns ((ant.number, path_length), iter)
     n_matchings = {i:[] for i in range(num_ants)}
-    num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats)
+    num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats,mode)
     start_vertex = generate_source(n) # n-tuple of zeros (origin)
     iterations = 500
     breaker = False
@@ -139,7 +139,7 @@ def run_ants_on_hypercube_random_colors(n, num_ants, plot_network_graph = True, 
                 if plot_stats: 
                     if curr_ant.get_path_len()[1] < n:
                         print(curr_ant.status())
-                        plot_network(curr_ant, adj_list_random_colour)
+                        # plot_network(curr_ant, adj_list_random_colour)
                     return curr_ant.get_path_len(), iter, n_matchings[curr_ant.number]
                 else:
                     print(f"{curr_ant} reached the end vertex")
