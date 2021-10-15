@@ -89,7 +89,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
     beta = 0.5
     num_vertices, num_ants, adj_list, adj_list_random_colour, n_matchings_default = initialize(n, num_ants, plot_stats,mode)
     start_vertex = generate_source(n) # n-tuple of zeros (origin)
-    iterations = 500
+    iterations = 2000
     breaker = False
             
     #initialize ants 
@@ -104,7 +104,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
             break
         
         for ant_number in range(num_ants):
-            if iter==999:
+            if iter==1999:
                 plot_network(curr_ant, adj_list_random_colour)
                 continue
             
@@ -153,7 +153,7 @@ def run_ants_on_hypercube_random_colors_optimized(n, num_ants, plot_network_grap
                 break  
     
     if plot_stats:
-        return ((np.NaN, np.NaN),1001, np.NaN)
+        return ((np.NaN, np.NaN),2001, np.NaN)
 
 
 if __name__ == '__main__':
