@@ -7,7 +7,6 @@ import copy
 import math
 from numpy import inf
 import sys
-import dataclasses
 from scipy.spatial import distance
 
 def hamming_distance(arr_1,arr_2):
@@ -124,14 +123,6 @@ def random_colouring(hypercube_main):
     
     return edge_colours
     
-
-def invert_index(ind, vertex):
-    vertex_final = list(vertex)
-    if vertex_final[ind] == 0:
-        vertex_final[ind] = 1 
-    else: 
-        vertex_final[ind] = 0
-    return tuple(vertex_final)
 
 
 def layered_colouring(hypercube_main, n):
@@ -317,6 +308,3 @@ def change_to_gray(color):
         return "#8CD8FF"
     else:
         return "#FFC2CB"
-
-    
-#JUST ADDING FOR FUN!

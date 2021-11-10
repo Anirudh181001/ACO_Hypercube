@@ -3,24 +3,22 @@ from networkx.algorithms.centrality.load import newman_betweenness_centrality
 from networkx.readwrite.adjlist import generate_adjlist
 import numpy as np
 import random as rd
-from numpy.lib.utils import source
 import copy
 from numpy import inf
 import sys
-from aco_helper import *
+from golay_helper import *
 import networkx as nx
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
-from pyvis.network import Network
 import queue
 
 
 #Initialize variables
-def initialize(n, num_ants, plot_stats):
-    num_vertices = 2**n
+def initialize(num_ants, plot_stats):
+    num_vertices = 2**24
     tic = time.time()
-    adj_list = make_hypercube_matrix(n) #Adjacency list of the n-hypercube graph
+    adj_list = make_hypercube_matrix(24) #Adjacency list of the n-hypercube graph
     toc = time.time()
     if not plot_stats:
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
@@ -58,9 +56,12 @@ def add_to_edge_colors(u,v, curr_col, edge_cols):
 def edge_visited(edge_colours,u,v):
     return v in edge_colours['red'].get(u,[]) or v in edge_colours['blue'].get(u,[])
 
-def color_three_layers_by_batch(hypercube, start_vertex, edge_colours, new_start_vertices):
+def color_four_layers_by_batch(hypercube, start_vertex, edge_colours, new_start_vertices):
+    # get the colour based on proj weight
+    # do we need to colour opposite edges or will this colouring scheme take care of it for us?
+    
     color_choices = ['red', "blue"]
-    n = len(start_vertex)
+    n = 24
     chosen_1_stack = {}
     chosen_2_stack = {}
     for choice_vertex_1 in hypercube[start_vertex]:
@@ -103,7 +104,7 @@ def is_complete(edge_cols,n):
     return False
         
 
-def adversarial_coloring(adj_list, plot=False):
+def adversarial_coloring(adj_list): # change to colour from list of codewords
     edge_colors = {'red':{}, 'blue':{}}
     hypercube = {key:copy.deepcopy(value) for key,value in adj_list.items()}
     start_vertex = rd.choice(list(hypercube.keys()))
@@ -115,17 +116,4 @@ def adversarial_coloring(adj_list, plot=False):
             del new_start_vertices[key]
             break
         new_start_vertices = color_three_layers_by_batch(hypercube, start_vertex, edge_colors,new_start_vertices)
-    if plot:
-        plot_network_here(edge_colors)
     return edge_colors
-
-
-def plot_network_here(adj_list_random_colour):
-    hypercube = nx.Graph()
-    edgelist = [("".join(map(str,node1)), "".join(map(str,node2)),  {'color':color}) for color in adj_list_random_colour for node1 in adj_list_random_colour[color] for node2 in adj_list_random_colour[color][node1]]
-    hypercube.add_edges_from(edgelist)
-    g = Network(height=2000,width=2000,notebook=False)
-    g.toggle_hide_edges_on_drag(False)
-    g.barnes_hut()
-    g.from_nx(hypercube)
-    g.show("ex.html")
