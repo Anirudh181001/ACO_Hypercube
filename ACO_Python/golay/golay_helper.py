@@ -66,7 +66,7 @@ def getbin(n, s=['']):
     return s
 
 
-def get_codewords():
+def get_golay_codewords():
     all_bin = getbin(12)
     A = [
         [0,1,1,1,1,1,1,1,1,1,1,1],

@@ -15,14 +15,14 @@ import queue
 
 
 #Initialize variables
-def initialize(num_ants, plot_stats):
+def initialize(plot_stats):
     num_vertices = 2**24
     tic = time.time()
     adj_list = make_hypercube_matrix(24) #Adjacency list of the n-hypercube graph
     toc = time.time()
     if not plot_stats:
         print("Time taken to generate adjacency list is ",toc - tic, " seconds")
-    return num_vertices, num_ants, adj_list # ,adj_list_random_colour, n_matchings_default
+    return num_vertices, adj_list # ,adj_list_random_colour, n_matchings_default
 
 
 def add_to_edge_colors(u,v, curr_col, edge_cols):
@@ -125,3 +125,9 @@ def color_hamming_balls(adj_list,golay_codewords): # change to colour from list 
     assert is_complete(edge_colors, 24)
 
     return edge_colors
+
+if __name__ == '__main__':
+    golay_codes = get_golay_codewords()
+    num_vertices, adj_list = initialize()
+    print(color_hamming_balls(adj_list,golay_codes))
+    
